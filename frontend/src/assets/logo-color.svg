@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 744 187" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,0,-314)">
+        <g id="Long-Logo-Green" serif:id="Long Logo Green" transform="matrix(0.929966,0,0,0.805222,0,314)">
+            <rect x="0" y="0" width="800" height="231.415" style="fill:none;"/>
+            <g transform="matrix(0.902152,0,0,1.04191,-103.329,-135.316)">
+                <text x="144.052px" y="281.415px" style="font-family:'Barlow-Light', 'Barlow';font-weight:300;font-size:160.391px;fill:#00897B;">Simply</text>
+                <text x="607.26px" y="281.415px" style="font-family:'Barlow-SemiBold', 'Barlow';font-weight:600;font-size:160.391px;fill:#00897B;">S<tspan x="701.249px " y="281.415px ">a</tspan>aS</text>
+            </g>
+        </g>
+    </g>
+</svg>

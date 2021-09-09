@@ -1,0 +1,125 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build, (Test) and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  # pull_request:
+  #   types: [opened, synchronize, reopened, closed]
+  #   branches:
+  #     - main
+
+env:
+  WEBAPP_NAME: 'webapp'  # Replace with the name of your Azure web app
+
+
+jobs:
+  backend-build-and-test:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Backend - Build and Test
+    
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Python version
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Python Poetry Action
+      uses: abatilo/actions-poetry@v2.1.0
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Collect static
+      run: |
+        cd backend
+        poetry run python manage.py collectstatic
+
+    - name: Run tests
+      run: |
+        cd backend
+        poetry run python manage.py test
+    
+    - name: Export requirements.txt
+      run: |
+        cd backend
+        poetry run poetry export -f requirements.txt --output requirements.txt
+
+    - name: Upload artifact for deployment jobs
+      uses: actions/upload-artifact@v2
+      with:
+        name: python-app
+        path: |
+          backend/
+          !backend/venv/
+
+  backend-deploy:
+    needs: backend-build-and-test
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Backend - Deploy
+
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: python-app
+        path: .
+
+    - name: Log in to Azure CLI
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_SERVICE_PRINCIPAL }}
+  
+    - name: Disable static collection and set migration command on App Service
+      uses: Azure/appservice-settings@v1
+      with:  
+        app-name: ${{ env.WEBAPP_NAME }}
+        app-settings-json: '[{"name": "KUDU_BUILD_VERSION", "value": "1.0.0"}, { "name": "DISABLE_COLLECTSTATIC", "value": "true" }, { "name": "POST_BUILD_COMMAND",  "value": "python manage.py migrate" }, { "name": "SCM_DO_BUILD_DURING_DEPLOYMENT", "value": "true" }]'
+    - name: Deploy to App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.WEBAPP_NAME}}
+
+  frontend-build-and-deploy-job:
+    needs: backend-deploy
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Frontend - Build and Deploy
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v0.0.1-preview
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WHITE_GLACIER_006035103 }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          action: "upload"
+          ###### Repository/Build Configurations - These values can be configured to match you app requirements. ######
+          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
+          app_location: "frontend/" # App source code path
+          # api_location: "api" # Api source code path - optional
+          output_location: "dist" # Built app content directory - optional
+          ###### End of Repository/Build Configurations ######
+
+  # frontend-close-pull-request-job:
+  #   if: github.event_name == 'pull_request' && github.event.action == 'closed'
+  #   runs-on: ubuntu-latest
+  #   name: Frontend - Close Pull Request
+  #   steps:
+  #     - name: Close Pull Request
+  #       id: closepullrequest
+  #       uses: Azure/static-web-apps-deploy@v0.0.1-preview
+  #       with:
+  #         azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WHITE_GLACIER_006035103 }}
+  #         action: "close"
